@@ -1,4 +1,7 @@
 const axios = require('axios')
+const url = require('url')
+
+const { CRYPTOCOMPARE_API_KEY } = process.env
 
 // Commands
 // start
@@ -20,25 +23,26 @@ exports.start = ctx => {
 
 // Actions
 // action_prices
+const pricesMessage = `Select one of the listed crypto currencies`
+const pricesOptions = {
+  parse_mode: 'markdown',
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { text: 'BTC', callback_data: 'action_price_BTC' },
+        { text: 'ETH', callback_data: 'action_price_ETH' }
+      ],
+      [
+        { text: 'BCH', callback_data: 'action_price_BCH' },
+        { text: 'LTC', callback_data: 'action_price_LTC' }
+      ],
+      [{ text: 'Back to Menu', callback_data: 'action_back' }]
+    ]
+  }
+}
 exports.actionPrices = ctx => {
-  const priceMessage = `Select one of the listed crypto currencies`
   ctx.deleteMessage()
-  ctx.reply(`*${priceMessage}*`, {
-    parse_mode: 'markdown',
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: 'BTC', callback_data: 'action_price_BTC' },
-          { text: 'ETH', callback_data: 'action_price_ETH' }
-        ],
-        [
-          { text: 'BCH', callback_data: 'action_price_BCH' },
-          { text: 'LTC', callback_data: 'action_price_LTC' }
-        ],
-        [{ text: 'Back to Menu', callback_data: 'action_back' }]
-      ]
-    }
-  })
+  ctx.reply(`*${pricesMessage}*`, pricesOptions)
 }
 
 // action_back
@@ -54,6 +58,51 @@ exports.priceActionList = [
   'action_price_BCH',
   'action_price_LTC'
 ]
-exports.actionCryptoPrice = ctx => {
-  const currency = ctx.match.split('_')[2]
+exports.actionCryptoPrice = async ctx => {
+  const symbol = ctx.match.split('_')[2]
+  const currency = 'INR'
+
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: `https://min-api.cryptocompare.com/data/pricemultifull`,
+      headers: { authorization: `Apikey ${CRYPTOCOMPARE_API_KEY}` },
+      params: {
+        fsyms: symbol,
+        tsyms: currency
+      }
+    })
+    const cryptoData = response.data.DISPLAY[symbol][currency]
+
+    const {
+      TOSYMBOL,
+      PRICE,
+      OPENDAY,
+      HIGHDAY,
+      LOWDAY,
+      SUPPLY,
+      MKTCAP
+    } = cryptoData
+
+    const message = `
+Symbol:  ${symbol} → ${TOSYMBOL} ${currency}
+Price:  ${PRICE},
+Open:  ${OPENDAY},
+High:  ${HIGHDAY},
+Low:  ${LOWDAY},
+Supply:  ${SUPPLY},
+Market Cap:  ${MKTCAP}
+    `
+
+    ctx.deleteMessage()
+    ctx.reply(message, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'Back to Prices', callback_data: 'action_prices' }]
+        ]
+      }
+    })
+  } catch (error) {
+    console.log(`FAILED TO GET DATA FOR ${symbol}: `, error)
+  }
 }
