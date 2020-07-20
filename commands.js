@@ -12,7 +12,8 @@ const startOptions = {
   reply_markup: {
     inline_keyboard: [
       [{ text: 'Crypto Prices', callback_data: 'action_prices' }], // First Row
-      [{ text: 'CoinMarketCap', url: 'https://coinmarketcap.com/' }] // Second Row
+      [{ text: 'CoinMarketCap', url: 'https://coinmarketcap.com/' }], // Second Row
+      [{ text: 'Bot Info', callback_data: 'action_info' }] // Third Row
     ]
   }
 }
@@ -105,4 +106,27 @@ Market Cap:  ${MKTCAP}
   } catch (error) {
     console.log(`FAILED TO GET DATA FOR ${symbol}: `, error)
   }
+}
+
+// Bot info
+exports.botInfo = ctx => {
+  ctx.reply('Bot Info', {
+    reply_markup: {
+      keyboard: [
+        [{ text: 'API' }, { text: 'Credits' }],
+        [{ text: 'Remove Keyboard' }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: true
+    }
+  })
+}
+
+// Remove Keyboard
+exports.removeKeyboard = ctx => {
+  ctx.reply('Keyboard Removed', {
+    reply_markup: {
+      remove_keyboard: true
+    }
+  })
 }
