@@ -110,6 +110,7 @@ Market Cap:  ${MKTCAP}
 
 // Bot info
 exports.botInfo = ctx => {
+  ctx.answerCbQuery()
   ctx.reply('Bot Info', {
     reply_markup: {
       keyboard: [
